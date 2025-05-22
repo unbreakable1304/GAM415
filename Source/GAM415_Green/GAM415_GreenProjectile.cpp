@@ -1,11 +1,30 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+// Include the header file for this projectile class
 #include "GAM415_GreenProjectile.h"
+
+// Provides the movement functionality used by projectile actors
 #include "GameFramework/ProjectileMovementComponent.h"
+
+// Contains utility functions like random number generation
 #include "Kismet/KismetMathLibrary.h"
+
+// Provides the collision component used to detect hits
 #include "Components/SphereComponent.h"
+
+// Enables spawning and configuring of decals in the world
 #include "Components/DecalComponent.h"
+
+// General gameplay utility functions (spawning actors, sounds, etc.)
 #include "Kismet/GameplayStatics.h"
+
+// Functions to spawn Niagara particle systems at runtime
+#include "NiagaraFunctionLibrary.h"
+
+// Gives access to and control over Niagara system instances
+#include "NiagaraComponent.h"
+
+// Used to create dynamic instances of materials at runtime
 #include "Materials/MaterialInstanceDynamic.h"
 
 // Constructor: Sets default values and initializes components
@@ -46,7 +65,12 @@ void AGAM415_GreenProjectile::BeginPlay()
 	Super::BeginPlay();
 
 	// Generate a random color using Unreal's math library
-	randColor = FLinearColor::MakeRandomColor();
+	randColor = FLinearColor(
+		UKismetMathLibrary::RandomFloatInRange(0.f, 1.f),
+		UKismetMathLibrary::RandomFloatInRange(0.f, 1.f),
+		UKismetMathLibrary::RandomFloatInRange(0.f, 1.f),
+		1.f // Alpha (opacity) set to fully visible
+	);
 
 	// Random frame index for flipbook-style texture atlasing (e.g., splats)
 	frameNum = FMath::FRandRange(0.f, 3.f);
@@ -109,8 +133,49 @@ void AGAM415_GreenProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherA
 				MatInstance->SetScalarParameterValue("Frame", frameNum);
 			}
 		}
+
+		// Spawn the Niagara splatter effect at the impact point, if assigned
+		if (splatP)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+				GetWorld(),
+				splatP,
+				Hit.ImpactPoint,
+				Hit.ImpactNormal.Rotation(),
+				FVector(1.f),                      // Scale
+				true,                              // Auto destroy
+				true,                              // Auto activate
+				ENCPoolMethod::AutoRelease         // Efficient pooling
+			)->SetNiagaraVariableLinearColor(FString("User.RandomColor"), randColor);
+		}
+
+		// If additional particle effects are assigned, spawn them attached to the collision component
+		if (OtherActor != nullptr)
+		{
+			if (colorP)
+			{
+				UNiagaraComponent* particleComp = UNiagaraFunctionLibrary::SpawnSystemAttached(
+					colorP,
+					HitComp,
+					NAME_None,
+					FVector(-20.f, 0.f, 0.f),
+					FRotator(0.f),
+					EAttachLocation::KeepRelativeOffset,
+					true
+				);
+
+				// Apply the same color to the spawned Niagara system
+				particleComp->SetNiagaraVariableLinearColor(FString("RandomColor"), randColor);
+
+				// Remove the projectile mesh from the scene
+				ballMesh->DestroyComponent();
+
+				// Disable collisions to prevent further interactions
+				CollisionComp->BodyInstance.SetCollisionProfileName("NoCollision");
+			}
+		}
 	}
 
-	// Destroy the projectile after impact
+	// Destroy the projectile after it impacts an object
 	Destroy();
 }

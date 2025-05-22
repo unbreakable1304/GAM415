@@ -1,11 +1,25 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+#pragma once  // Ensures the header is only included once during compilation
 
-#pragma once
-
+// Includes core engine types and utilities
 #include "CoreMinimal.h"
+
+// Provides base functionality for all actors in the game world
 #include "GameFramework/Actor.h"
+
+// Provides access to UBoxComponent, a component used for collision detection
 #include "Components/BoxComponent.h"
+
+// Provides Niagara particle system spawning functions
+#include "NiagaraFunctionLibrary.h"
+
+// Gives access to Niagara particle system components for runtime manipulation
+#include "NiagaraComponent.h"
+
+// This generated header must come last for Unreal’s reflection system
 #include "CubeDMIMod.generated.h"
+
+// Forward declaration of the Niagara System to reduce compile-time dependencies
+class UNiagaraSystem;
 
 // This class represents a cube actor with dynamic material properties
 // that change color when the player overlaps with it.
@@ -42,14 +56,18 @@ public:
 	UPROPERTY()
 	UMaterialInstanceDynamic* dmiMat;
 
+	// Niagara particle system to spawn upon player overlap — used to visually enhance feedback.
+	UPROPERTY(EditAnywhere)
+	UNiagaraSystem* colorP;
+
 	// Function triggered when another actor overlaps with the cube's collision box.
 	UFUNCTION()
 	void OnOverlapBegin(
-		class UPrimitiveComponent* overlappedComp,
-		class AActor* OtherActor,
-		class UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex,
-		bool bFromSweep,
-		const FHitResult& SweepResult
+		class UPrimitiveComponent* overlappedComp,  // The component that was overlapped
+		class AActor* OtherActor,                   // The actor that initiated the overlap
+		class UPrimitiveComponent* OtherComp,       // The specific component that overlapped
+		int32 OtherBodyIndex,                       // Index of the body that overlapped (for multi-body components)
+		bool bFromSweep,                            // True if this was a sweep result
+		const FHitResult& SweepResult               // Detailed result of the overlap, including hit location
 	);
 };

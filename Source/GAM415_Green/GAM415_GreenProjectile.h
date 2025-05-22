@@ -1,14 +1,20 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#pragma once
+#pragma once  // Ensures the header file is only included once per compilation
 
+// Includes core types, math, logging, and Unreal-specific data types
 #include "CoreMinimal.h"
+
+// Provides base functionality for all actors that can be placed in the level
 #include "GameFramework/Actor.h"
+
+// Required for Unreal Header Tool to process reflection information
 #include "GAM415_GreenProjectile.generated.h"
 
-// Forward declarations to reduce compile dependencies
-class USphereComponent;
-class UProjectileMovementComponent;
+// Forward declarations to reduce dependencies and compile time
+class USphereComponent;               // For collision handling
+class UProjectileMovementComponent;   // For projectile physics behavior
+class UNiagaraSystem;                 // For spawning Niagara particle systems
 
 // Represents a projectile that can be fired in the game world,
 // which spawns a matching decal (splat) on impact and has a randomized appearance.
@@ -45,6 +51,14 @@ protected:
 	UPROPERTY()
 	float frameNum;
 
+	// Niagara system used to spawn an additional effect on impact (e.g., confetti)
+	UPROPERTY(EditAnywhere)
+	UNiagaraSystem* colorP;
+
+	// Niagara system used to spawn a splatter effect at the impact point
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
+	UNiagaraSystem* splatP;
+
 public:
 
 	// Constructor: Sets default values for this projectile.
@@ -68,11 +82,11 @@ public:
 	// Spawns a decal at the hit location using the stored color and frame.
 	UFUNCTION()
 	void OnHit(
-		UPrimitiveComponent* HitComp,
-		AActor* OtherActor,
-		UPrimitiveComponent* OtherComp,
-		FVector NormalImpulse,
-		const FHitResult& Hit
+		UPrimitiveComponent* HitComp,     // Component that registered the hit
+		AActor* OtherActor,               // Actor that was hit
+		UPrimitiveComponent* OtherComp,   // The other component involved in the collision
+		FVector NormalImpulse,            // Force of impact
+		const FHitResult& Hit             // Full result information from the collision
 	);
 
 	// Getter for the collision component (used externally if needed).
