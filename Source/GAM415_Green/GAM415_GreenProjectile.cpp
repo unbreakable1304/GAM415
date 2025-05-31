@@ -27,6 +27,9 @@
 // Used to create dynamic instances of materials at runtime
 #include "Materials/MaterialInstanceDynamic.h"
 
+#include "PerlinProcTerrain.h"
+
+
 // Constructor: Sets default values and initializes components
 AGAM415_GreenProjectile::AGAM415_GreenProjectile()
 {
@@ -131,6 +134,13 @@ void AGAM415_GreenProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherA
 			{
 				MatInstance->SetVectorParameterValue("Color", randColor);
 				MatInstance->SetScalarParameterValue("Frame", frameNum);
+
+				APerlinProcTerrain* pocTerrain = Cast<APerlinProcTerrain>(OtherActor);
+				if(pocTerrain)
+				{
+					// If the hit actor is a terrain, apply the color to the terrain's material
+					pocTerrain->AlterMesh(Hit.ImpactPoint);
+				}
 			}
 		}
 
