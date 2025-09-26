@@ -103,3 +103,40 @@ void APerlinProcTerrain::CreateTriangles()
 		Vertex++;
 	}
 }
+
+
+void APerlinProcTerrain::Regenerate()
+{
+	BuildMesh();
+}
+
+void APerlinProcTerrain::SetTerrainParams(int32 InSeed, int32 InXVerts, int32 InYVerts, float InGridSpacing, float InHeightScale,
+	int32 InOctaves, float InFrequency, float InLacunarity, float InPersistence, bool bInRidge, bool bInBillow)
+{
+	Seed = InSeed;
+	XSize = InXVerts; // if user used XSize/YSize naming
+	YSize = InYVerts;
+	GridSpacing = InGridSpacing;
+	HeightScale = InHeightScale;
+	Octaves = FMath::Clamp(InOctaves, 1, 12);
+	Frequency = FMath::Max(0.0001f, InFrequency);
+	Lacunarity = FMath::Max(1.f, InLacunarity);
+	Persistence = FMath::Clamp(InPersistence, 0.f, 1.f);
+	bRidge = bInRidge;
+	bBillow = bInBillow;
+}
+
+
+float APerlinProcTerrain::FractalNoise2D(float X, float Y) const
+{
+	float Amp = 1.f, Freq = Frequency, Sum = 0.f, Norm = 0.f;
+	for (int32 Oct=0; Oct<Octaves; ++Oct)
+	{
+		float Sample = FMath::PerlinNoise3D(FVector(X*Freq, Y*Freq, Seed*0.1234f));
+		float N = Sample;
+		if (bRidge) { N = 1.f - FMath::Abs(Sample); }
+		else if (bBillow) { N = FMath::Abs(Sample); }
+		Sum += N * Amp; Norm += Amp; Amp *= Persistence; Freq *= Lacunarity;
+	}
+	return (Norm>KINDA_SMALL_NUMBER) ? (Sum/Norm) : 0.f;
+}

@@ -58,11 +58,32 @@ public:
 	FVector Depth;
 
 protected:
+	float FractalNoise2D(float X, float Y) const;
+	void BuildMesh();
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	// Material to apply to the procedural mesh
-	UPROPERTY(EditAnywhere)
+	
+	// === Added: Fractal noise controls ===
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Terrain|Noise", meta=(ClampMin="1", ClampMax="12"))
+	int32 Octaves = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Terrain|Noise", meta=(ClampMin="0.0001"))
+	float Frequency = 0.0035f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Terrain|Noise", meta=(ClampMin="1.0"))
+	float Lacunarity = 2.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Terrain|Noise", meta=(ClampMin="0.0", ClampMax="1.0"))
+	float Persistence = 0.5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Terrain|Noise")
+	bool bRidge = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Terrain|Noise")
+	bool bBillow = false;
+UPROPERTY(EditAnywhere)
 	UMaterialInterface* Mat;
 
 public:

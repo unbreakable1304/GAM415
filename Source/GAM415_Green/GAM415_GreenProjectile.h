@@ -94,4 +94,14 @@ public:
 
 	// Getter for the movement component (used externally for configuring behavior).
 	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
+
+	// === Added: randomized FX parameters (preserve original collision/projectile behavior) ===
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="FX")
+	FLinearColor randColor = FLinearColor::White;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FX", meta=(ClampMin="0", ClampMax="3"))
+	int32 frameNum = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FX")
+	bool bRandomDecalRotation = true;
 };

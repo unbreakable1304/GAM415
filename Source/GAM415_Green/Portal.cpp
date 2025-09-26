@@ -103,17 +103,37 @@ void APortal::SetBool(AGAM415_GreenCharacter* playerChar)
 // Updates the portal's scene capture camera to simulate looking through the portal
 void APortal::UpdatePortals()
 {
-    // Calculate the offset between the two portals
+    if (!OtherPortal) return;  // Safety check to prevent crashes
+
     FVector Location = this->GetActorLocation() - OtherPortal->GetActorLocation();
 
-    // Get the player's current camera location and rotation
-    FVector camLocation = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->GetTransformComponent()->GetComponentLocation();
-    FRotator camRotation = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->GetTransformComponent()->GetComponentRotation();
+    APlayerCameraManager* camManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
+    if (!camManager) return;  // Safety check for camera manager
 
-    // Offset the player's camera location relative to the other portal
-    FVector CombinedLocation = camLocation + Location;
+    USceneComponent* camTransform = camManager->GetTransformComponent();
+    if (!camTransform) return;  // Ensure the transform component exists
 
-    // Update the scene capture component to simulate the camera view through the portal
-    sceneCapture->SetWorldLocationAndRotation(CombinedLocation, camRotation);
+    FVector camLocation = camTransform->GetComponentLocation();
+    FRotator camRotation = camTransform->GetComponentRotation();
+
+    FVector CombinedLocation = camLocation + Location; // kept
+	// NOTE: consider mirroring across portal plane for accurate view
+
+    if (sceneCapture)
+    {
+        sceneCapture->SetWorldLocationAndRotation(CombinedLocation, camRotation);
+    }
 }
 
+
+
+
+void APortal::UpdateRenderTargetResolution()
+{
+	if (!GEngine || !GEngine->GameViewport) return;
+	FVector2D Size(1280,720);
+	GEngine->GameViewport->GetViewportSize(Size);
+	const int32 LongSide = FMath::Clamp((int32)FMath::Max(Size.X, Size.Y), 256, MaxCaptureResolution);
+	const int32 ShortSide = FMath::Clamp((int32)(LongSide * 9.f / 16.f), 256, MaxCaptureResolution);
+	if (renderTarget) { renderTarget->ResizeTarget(LongSide, ShortSide); }
+}

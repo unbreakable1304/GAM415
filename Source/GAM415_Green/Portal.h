@@ -12,7 +12,7 @@
 // Forward declaration of the player character class to avoid circular dependency
 class GAM415_GreenCharacter;
 
-UCLASS()
+UCLASS(BlueprintType, Blueprintable)
 class GAM415_GREEN_API APortal : public AActor
 {
 	GENERATED_BODY()
